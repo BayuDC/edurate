@@ -24,5 +24,9 @@ router
   .group(() => {
     router.post('/auth/logout', [AuthController, 'logout']);
     router.get('/auth/me', [AuthController, 'me']);
+
+    router.get('/check/admin', () => 'OK').use(middleware.gate({ role: 'admin' }));
+    router.get('/check/student', () => 'OK').use(middleware.gate({ role: 'student' }));
+    router.get('/check/teacher', () => 'OK').use(middleware.gate({ role: 'teacher' }));
   })
   .use([middleware.auth({ guards: ['api'] })]);
