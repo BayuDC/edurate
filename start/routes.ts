@@ -12,6 +12,7 @@ import { middleware } from '#start/kernel';
 
 const AuthController = () => import('#controllers/auth_controller');
 const PeriodController = () => import('#controllers/period_controller');
+const ClassController = () => import('#controllers/class_controller');
 
 router.get('/', async () => {
   return {
@@ -31,5 +32,6 @@ router
     router.get('/check/teacher', () => 'OK').use(middleware.gate({ role: 'teacher' }));
 
     router.resource('/periods', PeriodController).apiOnly();
+    router.resource('/classes', ClassController).apiOnly();
   })
   .use([middleware.auth({ guards: ['api'] })]);
