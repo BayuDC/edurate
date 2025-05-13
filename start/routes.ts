@@ -13,6 +13,7 @@ import { middleware } from '#start/kernel';
 const AuthController = () => import('#controllers/auth_controller');
 const PeriodController = () => import('#controllers/period_controller');
 const ClassController = () => import('#controllers/class_controller');
+const CourseController = () => import('#controllers/course_controller');
 
 router.get('/', async () => {
   return {
@@ -31,7 +32,12 @@ router
     router.get('/check/student', () => 'OK').use(middleware.gate({ role: 'student' }));
     router.get('/check/teacher', () => 'OK').use(middleware.gate({ role: 'teacher' }));
 
-    router.resource('/periods', PeriodController).apiOnly();
-    router.resource('/classes', ClassController).apiOnly();
+    router
+      .group(() => {
+        router.resource('/periods', PeriodController).apiOnly();
+        router.resource('/classes', ClassController).apiOnly();
+        router.resource('/courses', CourseController).apiOnly();
+      })
+      .use(middleware.gate({ role: 'admin' }));
   })
   .use([middleware.auth({ guards: ['api'] })]);
