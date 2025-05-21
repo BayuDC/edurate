@@ -8,7 +8,7 @@ import Profile from '#models/profile';
 
 export default class extends BaseSeeder {
   async run() {
-    const numbers = Array.from(Array(100)).map((_, i) => ('0' + i).slice(-2));
+    const numbers = Array.from(Array(80)).map((_, i) => ('0' + (i + 1)).slice(-2));
 
     const users = await User.createMany(
       numbers.map((number) => {
