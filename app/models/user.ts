@@ -1,9 +1,12 @@
 import { DateTime } from 'luxon';
 import hash from '@adonisjs/core/services/hash';
 import { compose } from '@adonisjs/core/helpers';
-import { BaseModel, column } from '@adonisjs/lucid/orm';
+import { BaseModel, column, hasOne } from '@adonisjs/lucid/orm';
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid';
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens';
+import type { HasOne } from '@adonisjs/lucid/types/relations';
+
+import Profile from '#models/profile';
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['username'],
@@ -25,6 +28,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @column()
   declare role: 'admin' | 'student' | 'teacher';
+
+  @hasOne(() => Profile, {
+    localKey: 'id',
+    foreignKey: 'userId',
+  })
+  declare profile: HasOne<typeof Profile>;
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime;
