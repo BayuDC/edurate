@@ -6,7 +6,7 @@ import Period from '#models/period';
 
 export default class ClassController {
   async index({ request, response }: HttpContext) {
-    const classes = await Class.query().preload('period').orderBy('name', 'asc');
+    const classes = await Class.query().orderBy('name', 'asc');
 
     response.send({
       classes,
@@ -21,7 +21,6 @@ export default class ClassController {
       });
     }
 
-    await classInstance.load('period');
     response.send({
       class: classInstance,
     });
@@ -31,25 +30,11 @@ export default class ClassController {
     const body = request.body();
     const data = await classValidator.validate(body);
 
-    const period = await Period.find(data.periodId);
-    if (!period) {
-      return response.status(422).send({
-        errors: [
-          {
-            rule: 'exists',
-            message: 'The period field must be exists',
-            field: 'periodId',
-          },
-        ],
-      });
-    }
-
     try {
-      const classInstance = await period.related('classes').create({
+      const classInstance = await Class.create({
         name: data.name,
       });
 
-      await classInstance.load('period');
       response.status(201).send({
         class: classInstance,
       });
@@ -72,25 +57,10 @@ export default class ClassController {
     const body = request.body();
     const data = await classValidator.validate(body);
 
-    const period = await Period.find(data.periodId);
-    if (!period) {
-      return response.status(422).send({
-        errors: [
-          {
-            rule: 'exists',
-            message: 'The period field must be exists',
-            field: 'periodId',
-          },
-        ],
-      });
-    }
-
     try {
       classInstance.name = data.name;
-      classInstance.periodId = data.periodId;
       await classInstance.save();
 
-      await classInstance.load('period');
       response.send({
         class: classInstance,
       });

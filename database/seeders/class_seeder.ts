@@ -7,19 +7,18 @@ export default class extends BaseSeeder {
     await Class.createMany([
       {
         name: 'Kelas A',
-        periodId: 4,
       },
       {
         name: 'Kelas B',
-        periodId: 4,
       },
       {
         name: 'Kelas C',
-        periodId: 4,
       },
       {
         name: 'Kelas D',
-        periodId: 4,
+      },
+      {
+        name: 'Kelas E',
       },
     ]);
   }

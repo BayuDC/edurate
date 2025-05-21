@@ -11,15 +11,6 @@ export default class Class extends BaseModel {
   @column()
   declare name: string;
 
-  @column()
-  declare periodId: number;
-
-  @hasOne(() => Period, {
-    localKey: 'periodId',
-    foreignKey: 'id',
-  })
-  declare period: HasOne<typeof Period>;
-
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime;
 
