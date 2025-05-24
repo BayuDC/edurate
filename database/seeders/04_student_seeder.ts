@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import User from '#models/user';
 import Student from '#models/student';
 import Profile from '#models/profile';
+import Class from '#models/class';
 
 export default class extends BaseSeeder {
   async run() {
@@ -39,5 +40,23 @@ export default class extends BaseSeeder {
         phone: faker.phone.number(),
       }))
     );
+
+    const cls = await Class.query().where('id', 1).first();
+    await cls?.related('students').attach({
+      [students[0].id]: { period_id: 4 },
+      [students[1].id]: { period_id: 4 },
+      [students[2].id]: { period_id: 4 },
+      [students[3].id]: { period_id: 4 },
+      [students[4].id]: { period_id: 4 },
+      [students[5].id]: { period_id: 4 },
+      [students[6].id]: { period_id: 4 },
+      [students[7].id]: { period_id: 4 },
+    });
+    await cls?.related('students').attach({
+      [students[0].id]: { period_id: 3 },
+      [students[1].id]: { period_id: 3 },
+      [students[2].id]: { period_id: 3 },
+      [students[3].id]: { period_id: 3 },
+    });
   }
 }

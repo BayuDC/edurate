@@ -104,6 +104,8 @@ export default class ClassController {
 
   // !
   async listStudents({ params, request, response }: HttpContext) {
+    const { page, limit } = request.qs();
+
     const period = await this.util.getActivePeriod();
 
     const cls = await Class.find(request.param('id'));
@@ -113,11 +115,18 @@ export default class ClassController {
       });
     }
 
-    await cls.load('students', (query) => {
-      query.wherePivot('period_id', period.id);
-    });
+    const students = (
+      await cls
+        .related('students')
+        .query()
+        .where('period_id', period.id)
+        .preload('profile')
+        .paginate(page, limit || 10)
+    ).serialize();
 
     return response.ok({
+      meta: students.meta,
+      students: students.data,
       class: cls,
     });
   }
