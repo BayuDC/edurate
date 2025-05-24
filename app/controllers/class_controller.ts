@@ -1,4 +1,6 @@
+import { inject } from '@adonisjs/core';
 import type { HttpContext } from '@adonisjs/core/http';
+
 import {
   createClassValidator,
   enrollStudentValidator,
@@ -8,8 +10,12 @@ import {
 import Class from '#models/class';
 import Period from '#models/period';
 import Student from '#models/student';
+import { UtilService } from '#services/util_service';
 
+@inject()
 export default class ClassController {
+  constructor(protected util: UtilService) {}
+
   async index({ request, response }: HttpContext) {
     const classes = await Class.query().orderBy('name', 'asc');
 
@@ -98,7 +104,8 @@ export default class ClassController {
 
   // !
   async listStudents({ params, request, response }: HttpContext) {
-    const periodId = 4;
+    const period = await this.util.getActivePeriod();
+
     const cls = await Class.find(request.param('id'));
     if (!cls) {
       return response.notFound({
@@ -107,7 +114,7 @@ export default class ClassController {
     }
 
     await cls.load('students', (query) => {
-      query.wherePivot('period_id', periodId);
+      query.wherePivot('period_id', period.id);
     });
 
     return response.ok({
@@ -116,7 +123,7 @@ export default class ClassController {
   }
 
   public async storeStudent({ params, request, response }: HttpContext) {
-    const periodId = 4;
+    const period = await this.util.getActivePeriod();
     const cls = await Class.find(request.param('id'));
     if (!cls) {
       return response.notFound({
@@ -126,13 +133,13 @@ export default class ClassController {
 
     const body = request.body();
     const data = await enrollStudentValidator.validate(body, {
-      meta: { periodId, classId: cls.id },
+      meta: { period: period.id, classId: cls.id },
     });
 
     try {
       await cls.related('students').attach({
         [data.studentId]: {
-          period_id: periodId,
+          period_id: period.id,
         },
       });
 
@@ -147,7 +154,7 @@ export default class ClassController {
     }
   }
   public async removeStudent({ params, request, response }: HttpContext) {
-    const periodId = 4;
+    const period = await this.util.getActivePeriod();
     const cls = await Class.find(request.param('id'));
     if (!cls) {
       return response.notFound({
@@ -157,7 +164,7 @@ export default class ClassController {
 
     const body = request.body();
     const data = await unenrollStudentValidator.validate(body, {
-      meta: { periodId, classId: cls.id },
+      meta: { periodId: period.id, classId: cls.id },
     });
     try {
       await cls.related('students').detach([data.studentId]);

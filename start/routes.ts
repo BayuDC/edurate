@@ -35,8 +35,8 @@ router
 
     router
       .group(() => {
+        router.get('/periods/active', [PeriodController, 'active']);
         router.resource('/periods', PeriodController).apiOnly();
-        router.get('/periods/active', () => {});
 
         router.resource('/courses', CourseController).apiOnly();
 

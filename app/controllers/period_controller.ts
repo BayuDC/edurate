@@ -1,8 +1,10 @@
 import { DateTime } from 'luxon';
 import type { HttpContext } from '@adonisjs/core/http';
+import { inject } from '@adonisjs/core';
 
 import Period from '#models/period';
 import { createPeriodValidator, updatePeriodValidator } from '#validators/period_validator';
+import { UtilService } from '#services/util_service';
 
 export default class PeriodController {
   async index({ response }: HttpContext) {
@@ -114,6 +116,21 @@ export default class PeriodController {
         error: error.message,
       });
       return;
+    }
+  }
+
+  @inject()
+  public async active({ response }: HttpContext, util: UtilService) {
+    try {
+      const period = await util.getActivePeriod();
+      return response.ok({
+        period,
+      });
+    } catch (error) {
+      return response.notFound({
+        message: 'No active period found',
+        error: error.message,
+      });
     }
   }
 }
