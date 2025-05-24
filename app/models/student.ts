@@ -1,9 +1,10 @@
 import { DateTime } from 'luxon';
-import { BaseModel, column, hasOne } from '@adonisjs/lucid/orm';
-import type { HasOne } from '@adonisjs/lucid/types/relations';
+import { BaseModel, column, hasOne, manyToMany } from '@adonisjs/lucid/orm';
+import type { HasOne, ManyToMany } from '@adonisjs/lucid/types/relations';
 
 import User from '#models/user';
 import Profile from '#models/profile';
+import Class from '#models/class';
 
 export default class Student extends BaseModel {
   @column({ isPrimary: true })
@@ -29,6 +30,12 @@ export default class Student extends BaseModel {
     foreignKey: 'userId',
   })
   declare profile: HasOne<typeof Profile>;
+
+  @manyToMany(() => Class, {
+    pivotColumns: ['period_id'],
+    pivotTable: 'student_classes',
+  })
+  declare classes: ManyToMany<typeof Class>;
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime;

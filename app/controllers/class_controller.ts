@@ -1,8 +1,13 @@
 import type { HttpContext } from '@adonisjs/core/http';
-import classValidator from '#validators/class_validator';
+import {
+  createClassValidator,
+  enrollStudentValidator,
+  unenrollStudentValidator,
+} from '#validators/class_validator';
 
 import Class from '#models/class';
 import Period from '#models/period';
+import Student from '#models/student';
 
 export default class ClassController {
   async index({ request, response }: HttpContext) {
@@ -28,7 +33,7 @@ export default class ClassController {
 
   async store({ params, request, response }: HttpContext) {
     const body = request.body();
-    const data = await classValidator.validate(body);
+    const data = await createClassValidator.validate(body);
 
     try {
       const classInstance = await Class.create({
@@ -55,7 +60,7 @@ export default class ClassController {
     }
 
     const body = request.body();
-    const data = await classValidator.validate(body);
+    const data = await createClassValidator.validate(body);
 
     try {
       classInstance.name = data.name;
@@ -86,6 +91,81 @@ export default class ClassController {
     } catch (error) {
       response.status(500).send({
         message: 'Failed to delete class',
+        error: error.message,
+      });
+    }
+  }
+
+  // !
+  async listStudents({ params, request, response }: HttpContext) {
+    const periodId = 4;
+    const cls = await Class.find(request.param('id'));
+    if (!cls) {
+      return response.notFound({
+        message: 'Class not found',
+      });
+    }
+
+    await cls.load('students', (query) => {
+      query.wherePivot('period_id', periodId);
+    });
+
+    return response.ok({
+      class: cls,
+    });
+  }
+
+  public async storeStudent({ params, request, response }: HttpContext) {
+    const periodId = 4;
+    const cls = await Class.find(request.param('id'));
+    if (!cls) {
+      return response.notFound({
+        message: 'Class not found',
+      });
+    }
+
+    const body = request.body();
+    const data = await enrollStudentValidator.validate(body, {
+      meta: { periodId, classId: cls.id },
+    });
+
+    try {
+      await cls.related('students').attach({
+        [data.studentId]: {
+          period_id: periodId,
+        },
+      });
+
+      return response.created({
+        message: 'Student enrolled successfully',
+      });
+    } catch (error) {
+      return response.internalServerError({
+        message: 'Failed to enroll student',
+        error: error.message,
+      });
+    }
+  }
+  public async removeStudent({ params, request, response }: HttpContext) {
+    const periodId = 4;
+    const cls = await Class.find(request.param('id'));
+    if (!cls) {
+      return response.notFound({
+        message: 'Class not found',
+      });
+    }
+
+    const body = request.body();
+    const data = await unenrollStudentValidator.validate(body, {
+      meta: { periodId, classId: cls.id },
+    });
+    try {
+      await cls.related('students').detach([data.studentId]);
+
+      return response.noContent();
+    } catch (error) {
+      return response.internalServerError({
+        message: 'Failed to unenroll student',
         error: error.message,
       });
     }

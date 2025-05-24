@@ -36,9 +36,16 @@ router
     router
       .group(() => {
         router.resource('/periods', PeriodController).apiOnly();
-        router.resource('/classes', ClassController).apiOnly();
+        router.get('/periods/active', () => {});
+
         router.resource('/courses', CourseController).apiOnly();
 
+        router.resource('/classes', ClassController).apiOnly();
+        router.get('/classes/:id/students', [ClassController, 'listStudents']);
+        router.post('/classes/:id/students', [ClassController, 'storeStudent']);
+        router.delete('/classes/:id/students', [ClassController, 'removeStudent']);
+
+        router.get('/students/available', [StudentController, 'available']);
         router.resource('/students', StudentController).apiOnly();
       })
       .use(middleware.gate({ role: 'admin' }));

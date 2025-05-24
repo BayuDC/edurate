@@ -136,4 +136,18 @@ export default class StudentsController {
 
     return response.noContent();
   }
+
+  public async available({ request, response }: HttpContext) {
+    const periodId = 4;
+
+    const students = await Student.query()
+      .whereDoesntHave('classes', (query) => {
+        query.where('period_id', periodId);
+      })
+      .orderBy('code', 'asc');
+
+    return response.ok({
+      students,
+    });
+  }
 }
