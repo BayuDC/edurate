@@ -142,7 +142,7 @@ export default class ClassController {
 
     const body = request.body();
     const data = await enrollStudentValidator.validate(body, {
-      meta: { period: period.id, classId: cls.id },
+      meta: { periodId: period.id, classId: cls.id },
     });
 
     try {
