@@ -144,15 +144,18 @@ export default class StudentsController {
     const period = await util.getActivePeriod();
     const { page, limit } = request.qs();
 
-    const students = await Student.query()
-      .whereDoesntHave('classes', (query) => {
-        query.where('period_id', period.id);
-      })
-      .orderBy('code', 'asc')
-      .paginate(page, limit || 10);
+    const students = (
+      await Student.query()
+        .whereDoesntHave('classes', (query) => {
+          query.where('period_id', period.id);
+        })
+        .orderBy('code', 'asc')
+        .paginate(page, limit || 10)
+    ).serialize();
 
     return response.ok({
-      students,
+      students: students.data,
+      meta: students.meta,
     });
   }
 }
