@@ -17,7 +17,6 @@ export const enrollStudentValidator = vine.compile(
         return !!student;
       })
       .unique(async (db, value, field) => {
-        console.log(field);
         const exists = await db
           .from('student_classes')
           .where('student_id', value)

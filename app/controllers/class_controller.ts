@@ -121,6 +121,7 @@ export default class ClassController {
         .query()
         .where('period_id', period.id)
         .preload('profile')
+        .orderBy('code', 'asc')
         .paginate(page, limit || 10)
     ).serialize();
 

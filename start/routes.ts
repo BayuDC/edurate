@@ -15,6 +15,7 @@ const PeriodController = () => import('#controllers/period_controller');
 const ClassController = () => import('#controllers/class_controller');
 const CourseController = () => import('#controllers/course_controller');
 const StudentController = () => import('#controllers/student_controller');
+const TeacherController = () => import('#controllers/teacher_controller');
 
 router.get('/', async () => {
   return {
@@ -47,6 +48,8 @@ router
 
         router.get('/students/available', [StudentController, 'available']);
         router.resource('/students', StudentController).apiOnly();
+
+        router.resource('/teachers', TeacherController).apiOnly();
       })
       .use(middleware.gate({ role: 'admin' }));
   })
