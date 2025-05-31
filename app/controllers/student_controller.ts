@@ -5,6 +5,8 @@ import User from '#models/user';
 import Student from '#models/student';
 
 import { createStudentValidator, updateStudentValidator } from '#validators/student_validator';
+import { inject } from '@adonisjs/core';
+import { UtilService } from '#services/util_service';
 
 export default class StudentsController {
   public async index({ request }: HttpContext) {
@@ -137,14 +139,17 @@ export default class StudentsController {
     return response.noContent();
   }
 
-  public async available({ request, response }: HttpContext) {
-    const periodId = 4;
+  @inject()
+  public async available({ request, response }: HttpContext, util: UtilService) {
+    const period = await util.getActivePeriod();
+    const { page, limit } = request.qs();
 
     const students = await Student.query()
       .whereDoesntHave('classes', (query) => {
-        query.where('period_id', periodId);
+        query.where('period_id', period.id);
       })
-      .orderBy('code', 'asc');
+      .orderBy('code', 'asc')
+      .paginate(page, limit || 10);
 
     return response.ok({
       students,
