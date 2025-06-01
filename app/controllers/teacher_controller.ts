@@ -13,6 +13,7 @@ export default class TeacherController {
     const teachers = (
       await Teacher.query()
         .orderBy('code', 'asc')
+        .preload('profile')
         .paginate(page, limit || 10)
     ).serialize();
 

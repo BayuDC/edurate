@@ -15,6 +15,7 @@ export default class StudentsController {
     const students = (
       await Student.query()
         .orderBy('code', 'asc')
+        .preload('profile')
         .paginate(page, limit || 10)
     ).serialize();
 
