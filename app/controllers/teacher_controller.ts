@@ -8,7 +8,13 @@ import { createTeacherValidator, updateTeacherValidator } from '#validators/teac
 
 export default class TeacherController {
   public async index({ request }: HttpContext) {
-    const { page, limit } = request.qs();
+    const { page, limit, simple } = request.qs();
+
+    if (simple) {
+      const teachers = await Teacher.query().orderBy('code', 'asc').select(['id', 'name', 'code']);
+
+      return { teachers };
+    }
 
     const teachers = (
       await Teacher.query()

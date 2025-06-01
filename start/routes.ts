@@ -40,6 +40,9 @@ router
         router.resource('/periods', PeriodController).apiOnly();
 
         router.resource('/courses', CourseController).apiOnly();
+        // router.get('/courses/:id/students', [CourseController, 'listStudents']);
+        // router.post('/courses/:id/students', [CourseController, 'storeStudent']);
+        // router.delete('/courses/:id/students', [CourseController, 'removeStudent']);
 
         router.resource('/classes', ClassController).apiOnly();
         router.get('/classes/:id/students', [ClassController, 'listStudents']);

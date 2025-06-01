@@ -4,6 +4,7 @@ import type { HasOne, ManyToMany } from '@adonisjs/lucid/types/relations';
 
 import User from '#models/user';
 import Profile from '#models/profile';
+import Course from '#models/course';
 import Class from '#models/class';
 
 export default class Student extends BaseModel {
@@ -36,6 +37,12 @@ export default class Student extends BaseModel {
     pivotTable: 'student_classes',
   })
   declare classes: ManyToMany<typeof Class>;
+
+  @manyToMany(() => Course, {
+    pivotTable: 'student_courses',
+    pivotColumns: ['period_id', 'teacher_id'],
+  })
+  declare courses: ManyToMany<typeof Course>;
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime;
