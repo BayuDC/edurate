@@ -11,6 +11,7 @@ export const enrollStudentValidator = vine.compile(
     studentId: vine
       .number()
       .positive()
+
       .exists(async (db, value, field) => {
         const student = await db.from('students').where('id', value).first();
 

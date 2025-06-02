@@ -1,8 +1,15 @@
+import { inject } from '@adonisjs/core';
 import type { HttpContext } from '@adonisjs/core/http';
 import Course from '#models/course';
+import Student from '#models/student';
 import { createCourseValidator, updateCourseValidator } from '#validators/course_validator';
+import { UtilService } from '#services/util_service';
+import db from '@adonisjs/lucid/services/db';
 
+@inject()
 export default class CourseController {
+  constructor(protected util: UtilService) {}
+
   async index({ request, response }: HttpContext) {
     const courses = await Course.query().orderBy('code', 'asc');
     response.json({
@@ -88,6 +95,67 @@ export default class CourseController {
       response.status(500).json({
         message: 'Failed to delete course',
         errors: error.messages,
+      });
+    }
+  }
+
+  // !
+
+  public async listStudents({ request, response, params }: HttpContext) {
+    const { limit, page, available } = request.qs();
+    const course = await Course.find(params.id);
+    const period = await this.util.getActivePeriod();
+
+    if (!course) {
+      return response.status(404).json({
+        message: 'Course not found',
+      });
+    }
+
+    try {
+      if (available) {
+        const students = (
+          await Student.query()
+            .whereNotExists((query) => {
+              query
+                .from('student_courses')
+                .whereRaw('student_courses.student_id = students.id')
+                .where('student_courses.course_id', params.id)
+                .where('student_courses.period_id', period.id);
+            })
+            .orderBy('code', 'asc')
+            .paginate(page, limit || 10)
+        ).serialize();
+
+        return response.json({
+          students: students.data,
+          meta: students.meta,
+        });
+      }
+
+      const query = await db
+        .from('students')
+        .join('student_courses', 'students.id', 'student_courses.student_id')
+        .join('teachers', 'student_courses.teacher_id', 'teachers.id')
+        .where('student_courses.course_id', params.id)
+        .where('student_courses.period_id', period.id)
+        .select(
+          'students.*',
+          'student_courses.teacher_id as teacher_id',
+          'teachers.name as teacher_name',
+          'teachers.code as teacher_code'
+        )
+        .orderBy('students.code', 'asc')
+        .paginate(page, limit || 10);
+
+      return response.json({
+        students: query.all(),
+        meta: query.getMeta(),
+      });
+    } catch (error) {
+      return response.status(500).json({
+        message: 'Failed to list students',
+        errors: error.message,
       });
     }
   }
