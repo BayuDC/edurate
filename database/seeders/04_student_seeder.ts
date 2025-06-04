@@ -6,6 +6,7 @@ import User from '#models/user';
 import Student from '#models/student';
 import Profile from '#models/profile';
 import Class from '#models/class';
+import db from '@adonisjs/lucid/services/db';
 
 export default class extends BaseSeeder {
   async run() {
@@ -41,32 +42,14 @@ export default class extends BaseSeeder {
       }))
     );
 
-    const cls1 = await Class.query().where('id', 1).first();
-    await cls1?.related('students').attach({
-      [students[0].id]: { period_id: 4 },
-      [students[1].id]: { period_id: 4 },
-      [students[2].id]: { period_id: 4 },
-      [students[3].id]: { period_id: 4 },
-      [students[4].id]: { period_id: 4 },
-      [students[5].id]: { period_id: 4 },
-      [students[6].id]: { period_id: 4 },
-      [students[7].id]: { period_id: 4 },
-      [students[8].id]: { period_id: 4 },
-      [students[9].id]: { period_id: 4 },
-    });
+    let ids = [];
 
-    const cls2 = await Class.query().where('id', 2).first();
-    await cls2?.related('students').attach({
-      [students[10].id]: { period_id: 4 },
-      [students[11].id]: { period_id: 4 },
-      [students[12].id]: { period_id: 4 },
-      [students[13].id]: { period_id: 4 },
-      [students[14].id]: { period_id: 4 },
-      [students[15].id]: { period_id: 4 },
-      [students[16].id]: { period_id: 4 },
-      [students[17].id]: { period_id: 4 },
-      [students[18].id]: { period_id: 4 },
-      [students[19].id]: { period_id: 4 },
-    });
+    for (let i = 0; i < 60; i++) {
+      const classId = parseInt(`${i / 15}`) + 1;
+
+      ids.push({ student_id: i + 1, class_id: classId, period_id: 4 });
+    }
+
+    await db.table('student_classes').multiInsert(ids);
   }
 }

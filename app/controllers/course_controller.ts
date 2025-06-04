@@ -5,6 +5,7 @@ import Student from '#models/student';
 import { createCourseValidator, updateCourseValidator } from '#validators/course_validator';
 import { UtilService } from '#services/util_service';
 import db from '@adonisjs/lucid/services/db';
+import Class from '#models/class';
 
 @inject()
 export default class CourseController {
@@ -102,9 +103,15 @@ export default class CourseController {
   // !
 
   public async listStudents({ request, response, params }: HttpContext) {
-    const { limit, page, available } = request.qs();
+    const { limit, page, available, classId } = request.qs();
     const course = await Course.find(params.id);
     const period = await this.util.getActivePeriod();
+
+    if (!classId || !(await Class.find(classId))) {
+      return response.status(400).json({
+        message: 'Class ID is required',
+      });
+    }
 
     if (!course) {
       return response.status(404).json({
@@ -114,22 +121,46 @@ export default class CourseController {
 
     try {
       if (available) {
-        const students = (
-          await Student.query()
-            .whereNotExists((query) => {
-              query
-                .from('student_courses')
-                .whereRaw('student_courses.student_id = students.id')
-                .where('student_courses.course_id', params.id)
-                .where('student_courses.period_id', period.id);
-            })
-            .orderBy('code', 'asc')
-            .paginate(page, limit || 10)
-        ).serialize();
+        // const students = (
+        //   await Student.query()
+        //     .whereNotExists((query) => {
+        //       query
+        //         .from('student_courses')
+        //         .whereRaw('student_courses.student_id = students.id')
+        //         .where('student_courses.course_id', params.id)
+        //         .where('student_courses.period_id', period.id);
+        //     })
+        //     .orderBy('code', 'asc')
+        //     .paginate(page, limit || 10)
+        // ).serialize();
+
+        const query = await db
+          .from('students')
+          .join('student_courses', 'students.id', 'student_courses.student_id')
+          .join('student_classes', function () {
+            this.on('students.id', 'student_classes.student_id').andOn(
+              'student_classes.period_id',
+              'student_courses.period_id'
+            );
+          })
+          .join('classes', 'student_classes.class_id', 'classes.id')
+          // .whereNot('student_courses.course_id', params.id)
+          .where('student_courses.period_id', period.id)
+
+          .select(
+            'students.id',
+            'students.name',
+            'students.code',
+            'classes.name as className',
+            'students.created_at as createdAt',
+            'students.updated_at as updatedAt'
+          )
+          .orderBy('students.code', 'asc')
+          .paginate(page, limit || 10);
 
         return response.json({
-          students: students.data,
-          meta: students.meta,
+          students: query.all(),
+          meta: query.getMeta(),
         });
       }
 
@@ -137,13 +168,25 @@ export default class CourseController {
         .from('students')
         .join('student_courses', 'students.id', 'student_courses.student_id')
         .join('teachers', 'student_courses.teacher_id', 'teachers.id')
+        .join('student_classes', function () {
+          this.on('students.id', 'student_classes.student_id').andOn(
+            'student_classes.period_id',
+            'student_courses.period_id'
+          );
+        })
+        .join('classes', 'student_classes.class_id', 'classes.id')
         .where('student_courses.course_id', params.id)
         .where('student_courses.period_id', period.id)
+        .where('student_classes.class_id', classId)
         .select(
-          'students.*',
-          'student_courses.teacher_id as teacher_id',
-          'teachers.name as teacher_name',
-          'teachers.code as teacher_code'
+          'students.id',
+          'students.name',
+          'students.code',
+          'students.created_at as createdAt',
+          'students.updated_at as updatedAt',
+          'student_courses.teacher_id as teacherId',
+          'teachers.name as teacherName',
+          'classes.name as className'
         )
         .orderBy('students.code', 'asc')
         .paginate(page, limit || 10);
