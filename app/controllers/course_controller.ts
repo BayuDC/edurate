@@ -121,32 +121,21 @@ export default class CourseController {
 
     try {
       if (available) {
-        // const students = (
-        //   await Student.query()
-        //     .whereNotExists((query) => {
-        //       query
-        //         .from('student_courses')
-        //         .whereRaw('student_courses.student_id = students.id')
-        //         .where('student_courses.course_id', params.id)
-        //         .where('student_courses.period_id', period.id);
-        //     })
-        //     .orderBy('code', 'asc')
-        //     .paginate(page, limit || 10)
-        // ).serialize();
+        const ids = (
+          await db
+            .from('student_courses')
+            .select('student_id')
+            .where('course_id', params.id)
+            .where('period_id', period.id)
+        ).map((row) => row.student_id);
 
         const query = await db
           .from('students')
-          .join('student_courses', 'students.id', 'student_courses.student_id')
-          .join('student_classes', function () {
-            this.on('students.id', 'student_classes.student_id').andOn(
-              'student_classes.period_id',
-              'student_courses.period_id'
-            );
-          })
+          .join('student_classes', 'students.id', 'student_classes.student_id')
           .join('classes', 'student_classes.class_id', 'classes.id')
-          // .whereNot('student_courses.course_id', params.id)
-          .where('student_courses.period_id', period.id)
-
+          .whereNotIn('students.id', ids)
+          .where('student_classes.class_id', classId)
+          .where('student_classes.period_id', period.id)
           .select(
             'students.id',
             'students.name',
@@ -159,8 +148,8 @@ export default class CourseController {
           .paginate(page, limit || 10);
 
         return response.json({
-          students: query.all(),
           meta: query.getMeta(),
+          students: query.all(),
         });
       }
 
@@ -182,18 +171,18 @@ export default class CourseController {
           'students.id',
           'students.name',
           'students.code',
-          'students.created_at as createdAt',
-          'students.updated_at as updatedAt',
           'student_courses.teacher_id as teacherId',
           'teachers.name as teacherName',
-          'classes.name as className'
+          'classes.name as className',
+          'students.created_at as createdAt',
+          'students.updated_at as updatedAt'
         )
         .orderBy('students.code', 'asc')
         .paginate(page, limit || 10);
 
       return response.json({
-        students: query.all(),
         meta: query.getMeta(),
+        students: query.all(),
       });
     } catch (error) {
       return response.status(500).json({
