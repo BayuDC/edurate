@@ -1,11 +1,18 @@
 import { inject } from '@adonisjs/core';
 import type { HttpContext } from '@adonisjs/core/http';
+import db from '@adonisjs/lucid/services/db';
+
+import Class from '#models/class';
 import Course from '#models/course';
 import Student from '#models/student';
-import { createCourseValidator, updateCourseValidator } from '#validators/course_validator';
+
+import {
+  createCourseValidator,
+  updateCourseValidator,
+  enrollStudentValidator,
+  unenrollStudentValidator,
+} from '#validators/course_validator';
 import { UtilService } from '#services/util_service';
-import db from '@adonisjs/lucid/services/db';
-import Class from '#models/class';
 
 @inject()
 export default class CourseController {
@@ -190,5 +197,68 @@ export default class CourseController {
         errors: error.message,
       });
     }
+  }
+
+  public async storeStudent({ request, response, params }: HttpContext) {
+    const period = await this.util.getActivePeriod();
+
+    const course = await Course.find(params.id);
+    if (!course) {
+      return response.status(404).json({
+        message: 'Course not found',
+      });
+    }
+
+    const body = request.body();
+    const data = await enrollStudentValidator.validate(body, {
+      meta: { courseId: course.id },
+    });
+
+    try {
+      await course.related('students').attach({
+        [data.studentId]: {
+          period_id: period.id,
+          teacher_id: data.teacherId,
+        },
+      });
+
+      return response.status(201).json({
+        message: 'Student enrolled successfully',
+      });
+    } catch (error) {
+      return response.status(500).json({
+        message: 'Failed to enroll student',
+        errors: error.messages,
+      });
+    }
+  }
+
+  public async removeStudent({ request, response, params }: HttpContext) {
+    const period = await this.util.getActivePeriod();
+
+    const course = await Course.find(params.id);
+    if (!course) {
+      return response.status(404).json({
+        message: 'Course not found',
+      });
+    }
+
+    const body = request.body();
+    const data = await unenrollStudentValidator.validate(body, {
+      meta: { courseId: course.id },
+    });
+
+    try {
+      await course.related('students').detach([data.studentId]);
+
+      return response.status(204);
+    } catch (error) {
+      return response.status(500).json({
+        message: 'Failed to unenroll student',
+        errors: error.messages,
+      });
+    }
+
+    return data;
   }
 }

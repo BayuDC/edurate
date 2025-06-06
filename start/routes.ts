@@ -30,9 +30,9 @@ router
     router.post('/auth/logout', [AuthController, 'logout']);
     router.get('/auth/me', [AuthController, 'me']);
 
-    router.get('/check/admin', () => 'OK').use(middleware.gate({ role: 'admin' }));
-    router.get('/check/student', () => 'OK').use(middleware.gate({ role: 'student' }));
-    router.get('/check/teacher', () => 'OK').use(middleware.gate({ role: 'teacher' }));
+    // router.get('/check/admin', () => 'OK').use(middleware.gate({ role: 'admin' }));
+    // router.get('/check/student', () => 'OK').use(middleware.gate({ role: 'student' }));
+    // router.get('/check/teacher', () => 'OK').use(middleware.gate({ role: 'teacher' }));
 
     router
       .group(() => {
@@ -41,8 +41,8 @@ router
 
         router.resource('/courses', CourseController).apiOnly();
         router.get('/courses/:id/students', [CourseController, 'listStudents']);
-        // router.post('/courses/:id/students', [CourseController, 'storeStudent']);
-        // router.delete('/courses/:id/students', [CourseController, 'removeStudent']);
+        router.post('/courses/:id/students', [CourseController, 'storeStudent']);
+        router.delete('/courses/:id/students', [CourseController, 'removeStudent']);
 
         router.resource('/classes', ClassController).apiOnly();
         router.get('/classes/:id/students', [ClassController, 'listStudents']);
