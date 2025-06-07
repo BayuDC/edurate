@@ -11,6 +11,7 @@ import router from '@adonisjs/core/services/router';
 import { middleware } from '#start/kernel';
 
 const AuthController = () => import('#controllers/auth_controller');
+const ProfileController = () => import('#controllers/profile_controller');
 const PeriodController = () => import('#controllers/period_controller');
 const ClassController = () => import('#controllers/class_controller');
 const CourseController = () => import('#controllers/course_controller');
@@ -29,6 +30,10 @@ router
   .group(() => {
     router.post('/auth/logout', [AuthController, 'logout']);
     router.get('/auth/me', [AuthController, 'me']);
+
+    router.get('/profile', [ProfileController, 'index']);
+    router.patch('/profile', [ProfileController, 'update']).use(middleware.gate({ role: 'admin' }));
+    router.patch('/profile/security', [ProfileController, 'updateSecurity']);
 
     // router.get('/check/admin', () => 'OK').use(middleware.gate({ role: 'admin' }));
     // router.get('/check/student', () => 'OK').use(middleware.gate({ role: 'student' }));
