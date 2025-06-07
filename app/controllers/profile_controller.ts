@@ -1,13 +1,12 @@
 import type { HttpContext } from '@adonisjs/core/http';
 import { DateTime } from 'luxon';
 
+import User from '#models/user';
 import Profile from '#models/profile';
-import { updateProfileValidator } from '#validators/profile_validator';
+
+import { updateProfileValidator, updateSecurityValidator } from '#validators/profile_validator';
 
 export default class ProfileController {
-  /**
-   * Get the authenticated user's profile
-   */
   async index({ auth, response }: HttpContext) {
     const user = auth.user!;
 
@@ -24,9 +23,6 @@ export default class ProfileController {
     });
   }
 
-  /**
-   * Update the authenticated user's profile
-   */
   async update({ auth, request, response }: HttpContext) {
     const user = auth.user!;
 
@@ -60,5 +56,25 @@ export default class ProfileController {
     }
   }
 
-  async updateSecurity({ auth, request, response }: HttpContext) {}
+  async updateSecurity({ auth, request, response }: HttpContext) {
+    const user = auth.user!;
+    const body = request.body();
+    const data = await updateSecurityValidator.validate(body, {
+      meta: { userId: user.id },
+    });
+
+    try {
+      user.password = data.password;
+      await user.save();
+
+      return response.ok({
+        message: 'Password updated successfully',
+      });
+    } catch (error) {
+      return response.badRequest({
+        message: 'Password update failed',
+        error: error.message,
+      });
+    }
+  }
 }
