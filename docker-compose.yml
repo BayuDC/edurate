@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  edurate:
+    container_name: edurate
+    build:
+      context: .
+      tags:
+        - bayudc/edurate
+    image: bayudc/edurate
+    ports:
+      - '3333:8080'
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
